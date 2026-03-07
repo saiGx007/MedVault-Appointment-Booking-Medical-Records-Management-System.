@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api/axiosConfig';
 import { Activity, CheckCircle, User, Calendar, Clock, Loader2, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function DoctorConsultations() {
   const [consultations, setConsultations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
 
   const fetchConsultations = async () => {
       try {
         const response = await api.get('/api/doctor/appointments');
-        // ONLY show PAID appointments here. APPROVED stays in Pending list.
         const active = response.data.filter(app => app.status === 'PAID');
         setConsultations(active);
       } catch (err) {
@@ -24,20 +25,15 @@ export default function DoctorConsultations() {
     fetchConsultations();
   }, []);
 
-  const handleComplete = async (id) => {
-    if (!window.confirm("Mark this consultation as completed?")) return;
-    try {
-      await api.post(`/api/doctor/complete/${id}`);
-      alert("Consultation marked as completed!");
-      fetchConsultations();
-    } catch (err) {
-      alert("Failed to update status.");
-    }
+  // UPDATED: Now navigates to a dedicated page instead of opening a modal
+  const handleOpenPrescription = (id) => {
+    navigate(`/doctor/prescription/${id}`);
   };
 
-  const filtered = consultations.filter(c =>
-    c.patient.user.fullName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filtered = consultations.filter(c => {
+      const patientName = c.patient?.user?.fullName || "";
+      return patientName.toLowerCase().includes(searchTerm.toLowerCase());
+    });
 
   if (loading) return (
     <div className="h-[60vh] flex items-center justify-center">
@@ -46,10 +42,10 @@ export default function DoctorConsultations() {
   );
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-page">
+    <div className="max-w-6xl mx-auto space-y-8 animate-page relative">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight tracking-tight flex items-center gap-3">
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
             <Activity className="text-blue-600" size={32} /> Active Consultations
           </h1>
           <p className="text-slate-500 font-medium mt-1">Manage your current patient queue and ongoing treatments.</p>
@@ -100,7 +96,7 @@ export default function DoctorConsultations() {
               </div>
 
               <button
-                onClick={() => handleComplete(con.id)}
+                onClick={() => handleOpenPrescription(con.id)}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-blue-200 transition-all active:scale-95"
               >
                 <CheckCircle size={18} /> Mark Complete

@@ -1,13 +1,7 @@
 package com.saigana.medvault.service;
 
-import com.saigana.medvault.entity.Appointment;
-import com.saigana.medvault.entity.Doctor;
-import com.saigana.medvault.entity.Patient;
-import com.saigana.medvault.entity.User;
-import com.saigana.medvault.repository.AppointmentRepository;
-import com.saigana.medvault.repository.DoctorRepository;
-import com.saigana.medvault.repository.PatientRepository;
-import com.saigana.medvault.repository.UserRepository;
+import com.saigana.medvault.entity.*;
+import com.saigana.medvault.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +19,31 @@ public class AppointmentService {
     @Autowired private DoctorRepository doctorRepository;
     @Autowired private PatientRepository patientRepository;
     @Autowired private UserRepository userRepository;
+    private final PrescriptionRepository prescriptionRepository;
+    public AppointmentService(AppointmentRepository appointmentRepository, PrescriptionRepository prescriptionRepository) {
+        this.appointmentRepository = appointmentRepository;
+        this.prescriptionRepository = prescriptionRepository;
+    }
+    @Transactional
+    public void savePrescriptionAndComplete(Long appointmentId, String medicines, String notes) {
+        // 1. Find the appointment
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        // 2. Create and save the prescription
+        Prescription prescription = new Prescription();
+        prescription.setAppointment(appointment);
+        prescription.setMedicines(medicines);
+        prescription.setDoctorNotes(notes);
+        prescription.setIssuedDate(LocalDate.now());
+
+        prescriptionRepository.save(prescription);
+
+        // 3. Update status to COMPLETED (Using your Enum)
+        // This is the trigger that unlocks the feedback button for the patient
+        appointment.setStatus(Appointment.AppointmentStatus.COMPLETED);
+        appointmentRepository.save(appointment);
+    }
 
     @Transactional
     public Appointment bookAppointment(String patientEmail, Long doctorUserId, String reason, String date, String time) {

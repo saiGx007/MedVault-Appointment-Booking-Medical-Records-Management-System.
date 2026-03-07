@@ -2,6 +2,7 @@ package com.saigana.medvault.controller;
 
 import com.saigana.medvault.entity.Appointment;
 import com.saigana.medvault.service.AppointmentService;
+import com.saigana.medvault.repository.AppointmentRepository; // Added this
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -18,6 +19,9 @@ public class AppointmentController {
     @Autowired
     private AppointmentService appointmentService;
 
+    @Autowired
+    private AppointmentRepository appointmentRepository; // Injection fixed here
+
     @PostMapping("/book")
     public ResponseEntity<?> book(@RequestBody Map<String, String> payload, Authentication authentication) {
         String patientEmail = authentication.getName();
@@ -32,28 +36,35 @@ public class AppointmentController {
 
         return ResponseEntity.ok(appointment);
     }
-    // Add this to src/main/java/com/saigana.medvault.controller/AppointmentController.java
 
     @GetMapping("/patient/my-bookings")
     public ResponseEntity<List<Appointment>> getMyBookings(Authentication authentication) {
         String email = authentication.getName();
-        // Use the existing service logic to find the patient and their appointments
         List<Appointment> bookings = appointmentService.getPatientAppointments(email);
         return ResponseEntity.ok(bookings);
     }
+
     @PostMapping("/pay/{id}")
     public ResponseEntity<?> payForAppointment(@PathVariable Long id, Authentication authentication) {
         try {
             String patientEmail = authentication.getName();
-            // Call the service to update status to PAID
             Appointment updatedAppointment = appointmentService.processPayment(patientEmail, id);
             return ResponseEntity.ok(updatedAppointment);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
     @GetMapping("/doctor/stats")
     public ResponseEntity<Map<LocalDate, Long>> getStats(Authentication auth) {
         return ResponseEntity.ok(appointmentService.getAppointmentStats(auth.getName()));
+    }
+
+    // This fixed method now uses the injected repository
+    @GetMapping("/{id}")
+    public ResponseEntity<Appointment> getAppointmentById(@PathVariable Long id) {
+        return appointmentRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }

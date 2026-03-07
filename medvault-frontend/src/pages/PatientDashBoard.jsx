@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react'; // FIX 1: Added Hooks
-import { Heart, Activity, Clock, Star, ArrowRight, User, Loader2 } from 'lucide-react';
-import api from '../api/axiosConfig'; // FIX 2: Ensure api is imported
+import React, { useState, useEffect } from 'react';
+import { Heart, Activity, Clock, Star, ArrowRight, User, Loader2, FileText, CheckCircle2 } from 'lucide-react'; // Added CheckCircle2
+import api from '../api/axiosConfig';
+import { useNavigate } from 'react-router-dom';
 
 export default function PatientDashboard() {
   const [recentAppointments, setRecentAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const stats = [
     { label: "Heart Rate", value: "72 bpm", sub: "Normal", color: "bg-rose-500", icon: Heart },
@@ -17,7 +19,6 @@ export default function PatientDashboard() {
     const fetchDashboardData = async () => {
       try {
         const response = await api.get('/api/appointments/patient/my-bookings');
-        // Sort by date descending and take top 3
         const latest = response.data
           .sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate))
           .slice(0, 3);
@@ -41,10 +42,13 @@ export default function PatientDashboard() {
           </h1>
           <p className="text-slate-500 font-medium mt-2">Managing your healthcare at MedVault.</p>
         </div>
-        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Live Sync: Active</span>
-        </div>
+        <button
+          onClick={() => navigate('/patient/medical-records')}
+          className="flex items-center gap-3 bg-blue-50 text-blue-700 px-6 py-3 rounded-2xl border border-blue-100 font-bold text-sm shadow-sm hover:bg-blue-100 transition-all group"
+        >
+          <FileText size={18} className="group-hover:rotate-12 transition-transform" />
+          View My Prescriptions
+        </button>
       </header>
 
       {/* Health Metrics Grid */}
@@ -64,11 +68,10 @@ export default function PatientDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Appointments List - DYNAMIC DATA */}
         <div className="lg:col-span-2 bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100">
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-xl font-bold text-slate-900">Recent Appointments</h3>
-            <button className="text-blue-600 font-bold text-sm hover:underline flex items-center gap-2">
+            <button onClick={() => navigate('/patient/appointments')} className="text-blue-600 font-bold text-sm hover:underline flex items-center gap-2">
               See All <ArrowRight size={16} />
             </button>
           </div>
@@ -82,10 +85,12 @@ export default function PatientDashboard() {
               recentAppointments.map((apt) => (
                 <AppointmentRow
                   key={apt.id}
+                  id={apt.id}
                   name={`Dr. ${apt.doctor.user.fullName}`}
                   type={apt.doctor.specialization}
                   date={`${apt.appointmentDate}, ${apt.appointmentTime}`}
                   status={apt.status}
+                  navigate={navigate} // Pass navigate to handle feedback click
                 />
               ))
             ) : (
@@ -94,12 +99,14 @@ export default function PatientDashboard() {
           </div>
         </div>
 
-        {/* Quick Action Card */}
         <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white relative overflow-hidden group">
           <div className="relative z-10">
             <h3 className="text-2xl font-bold leading-tight">Need a <br/>Checkup?</h3>
             <p className="text-slate-400 mt-4 text-sm leading-relaxed">Book a consultation with our verified specialists now.</p>
-            <button className="mt-8 bg-blue-600 hover:bg-blue-700 text-white w-full py-4 rounded-2xl font-bold transition-all shadow-lg shadow-blue-600/30 active:scale-95">
+            <button
+               onClick={() => navigate('/patient/book-appointment')}
+               className="mt-8 bg-blue-600 hover:bg-blue-700 text-white w-full py-4 rounded-2xl font-bold transition-all shadow-lg shadow-blue-600/30 active:scale-95"
+            >
               Book Appointment
             </button>
           </div>
@@ -110,9 +117,9 @@ export default function PatientDashboard() {
   );
 }
 
-function AppointmentRow({ name, type, date, status }) {
-  // Logic to determine status color
-  const statusColor = status === 'COMPLETED' || status === 'PAID' ? 'text-blue-600' : 'text-amber-600';
+function AppointmentRow({ id, name, type, date, status, navigate }) {
+  const isCompleted = status === 'COMPLETED';
+  const statusColor = isCompleted ? 'text-emerald-600' : 'text-amber-600'; // Changed to emerald for clarity
 
   return (
     <div className="flex items-center justify-between p-6 bg-slate-50 rounded-3xl border border-transparent hover:border-slate-200 hover:bg-white transition-all cursor-pointer group">
@@ -122,14 +129,41 @@ function AppointmentRow({ name, type, date, status }) {
         </div>
         <div>
           <p className="font-bold text-slate-800">{name}</p>
-          <p className="text-xs text-slate-500 font-medium">{type}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-slate-500 font-medium">{type}</p>
+            {isCompleted && (
+               <span className="flex items-center gap-1 text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase">
+                 <CheckCircle2 size={10} /> Prescription Ready
+               </span>
+            )}
+          </div>
         </div>
       </div>
-      <div className="text-right">
-        <p className="text-sm font-bold text-slate-800">{date}</p>
-        <p className={`text-[10px] font-black uppercase tracking-tighter mt-1 ${statusColor}`}>
-          {status}
-        </p>
+      <div className="flex items-center gap-6">
+        <div className="text-right">
+          <p className="text-sm font-bold text-slate-800">{date}</p>
+          <p className={`text-[10px] font-black uppercase tracking-tighter mt-1 ${statusColor}`}>
+            {status}
+          </p>
+        </div>
+
+        {/* FEEDBACK BUTTON: Only triggers if status is COMPLETED */}
+        {isCompleted ? (
+          <button
+            onClick={(e) => {
+                e.stopPropagation(); // Prevent row click
+                navigate(`/patient/feedback/${id}`); // Adjust this path to match your existing feedback route
+            }}
+            className="bg-amber-100 text-amber-700 p-2.5 rounded-xl hover:bg-amber-200 transition-all shadow-sm hover:scale-110 active:scale-90"
+            title="Give Feedback"
+          >
+            <Star size={18} fill="currentColor" />
+          </button>
+        ) : (
+          <div className="w-10 h-10 flex items-center justify-center text-slate-300" title="Feedback locked until prescription is sent">
+             <Star size={18} className="opacity-20" />
+          </div>
+        )}
       </div>
     </div>
   );

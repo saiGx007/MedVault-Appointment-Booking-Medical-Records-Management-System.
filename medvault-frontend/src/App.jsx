@@ -14,6 +14,8 @@ import DoctorPendingRequests from "./pages/DoctorPendingRequests";
 import DoctorConsultations from "./pages/DoctorConsultations";
 import DoctorHistory from "./pages/DoctorHistory";
 import DoctorFeedbacks from "./pages/DoctorFeedbacks";
+import MedicalRecords from "./pages/MedicalRecords";
+import PrescriptionPage from "./pages/PrescriptionPage"; // ADD THIS IMPORT
 
 function App() {
   return (
@@ -30,6 +32,7 @@ function App() {
             <Route path="profile" element={<Profile />} />
             <Route path="book" element={<BookAppointment />} />
             <Route path="bookings" element={<MyBookings />} />
+            <Route path="medical-records" element={<MedicalRecords />} />
           </Route>
 
           {/* Special case: Payment without Layout */}
@@ -40,10 +43,13 @@ function App() {
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<DoctorDashboard />} />
             <Route path="pending" element={<DoctorPendingRequests />} />
+            <Route path="appointments" element={<DoctorConsultations />} /> {/* Make sure this matches your navigate path */}
             <Route path="consultations" element={<DoctorConsultations />} />
             <Route path="history" element={<DoctorHistory />} />
             <Route path="profile" element={<Profile />} />
             <Route path="feedbacks" element={<DoctorFeedbacks />} />
+            {/* FIXED: Removed leading slash from path to keep it relative to /doctor */}
+            <Route path="prescription/:appointmentId" element={<PrescriptionPage />} />
           </Route>
 
           <Route path="/" element={<Navigate to="/login" replace />} />

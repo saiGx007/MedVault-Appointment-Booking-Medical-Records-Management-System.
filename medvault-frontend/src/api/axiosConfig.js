@@ -12,13 +12,15 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Added: Auto-logout on token expiration
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
+    // Only logout if it's a 401 and NOT a login request itself
+    if (error.response && error.response.status === 401 && !error.config.url.includes('/login')) {
+      console.warn("Unauthorized request - Logging out");
       localStorage.clear();
-      window.location.href = '/login';
+      // Use window.location.replace to prevent back-button loops
+      window.location.replace('/login');
     }
     return Promise.reject(error);
   }

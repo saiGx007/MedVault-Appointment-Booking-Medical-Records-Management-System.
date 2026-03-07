@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axiosConfig';
 import { UserCheck, Clock, MessageSquare, TrendingUp, Calendar, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function DoctorDashboard() {
   const [graphData, setGraphData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const stats = [
     { label: "Today's Patients", value: "12", icon: UserCheck, color: "text-blue-600", bg: "bg-blue-50" },
@@ -16,10 +18,9 @@ export default function DoctorDashboard() {
     const fetchStats = async () => {
       try {
         const response = await api.get('/api/appointments/doctor/stats');
-        // Transform backend Map { "2026-03-01": 5 } to chart array
         const formatted = Object.entries(response.data).map(([date, count]) => ({
           day: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
-          height: Math.min(count * 20, 100) // Scale count for visualization
+          height: Math.min(count * 20, 100)
         }));
         setGraphData(formatted);
       } catch (err) {
@@ -57,7 +58,6 @@ export default function DoctorDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Dynamic Performance Chart */}
         <div className="lg:col-span-2 bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm">
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-xl font-bold text-slate-900">Patient Inflow Overview</h3>
@@ -97,7 +97,10 @@ export default function DoctorDashboard() {
                     </div>
                 </div>
             </div>
-            <button className="mt-8 bg-blue-600 hover:bg-blue-700 text-white w-full py-4 rounded-2xl font-bold transition-all" onClick={() => navigate('/doctor/appointments')}>
+            <button
+              className="mt-8 bg-blue-600 hover:bg-blue-700 text-white w-full py-4 rounded-2xl font-bold transition-all"
+              onClick={() => navigate('/doctor/appointments')}
+            >
               View All Appointments
             </button>
           </div>

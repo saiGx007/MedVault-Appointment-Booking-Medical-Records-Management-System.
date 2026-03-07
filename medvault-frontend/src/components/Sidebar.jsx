@@ -16,13 +16,14 @@ export default function Sidebar({ isOpen }) {
   };
 
   const menuItems = {
-    PATIENT: [
-      { name: 'Home Page', icon: Home, path: '/patient/dashboard' },
-      { name: 'My Bookings', icon: ClipboardList, path: '/patient/bookings' },
-      { name: 'Book Appointment', icon: PlusCircle, path: '/patient/book' },
-      { name: 'Profile', icon: User, path: '/patient/profile' },
-      { name: 'Medical Records', icon: FileText, path: '/patient/records' },
-    ],
+      PATIENT: [
+        { name: 'Home Page', icon: Home, path: '/patient/dashboard' },
+        { name: 'My Bookings', icon: ClipboardList, path: '/patient/bookings' },
+        { name: 'Book Appointment', icon: PlusCircle, path: '/patient/book' },
+        { name: 'Profile', icon: User, path: '/patient/profile' },
+        // FIXED: Path must match App.jsx exactly
+        { name: 'Medical Records', icon: FileText, path: '/patient/medical-records' },
+      ],
     DOCTOR: [
       { name: 'Home Page', icon: Home, path: '/doctor/dashboard' },
       { name: 'Consultations', icon: Activity, path: '/doctor/consultations' },
